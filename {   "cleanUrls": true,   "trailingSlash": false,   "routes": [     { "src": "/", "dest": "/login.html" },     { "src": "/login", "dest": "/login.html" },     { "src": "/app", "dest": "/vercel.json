@@ -1,9 +1,0 @@
-{
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "routes": [
-    { "src": "/", "dest": "/login.html" },
-    { "src": "/login", "dest": "/login.html" },
-    { "src": "/app", "dest": "/download-index.html" }
-  ]
-}
