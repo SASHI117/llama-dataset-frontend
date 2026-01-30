@@ -205,7 +205,7 @@
         sessionStorage.setItem("authToken", data.access_token);
 
         // IMPORTANT: replace() blocks forward navigation
-        window.location.replace("download-index.html");
+        window.location.replace("/app");
 
       } catch {
         errorMsg.style.display = "block";
@@ -215,3 +215,4 @@
 
 </body>
 </html>
+
