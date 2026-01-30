@@ -1,7 +1,15 @@
 {
   "routes": [
     {
-      "src": "/",
+      "src": "^/$",
+      "dest": "/login.html"
+    },
+    {
+      "src": "^/download-index\\.html$",
+      "dest": "/download-index.html"
+    },
+    {
+      "src": "^(.*)$",
       "dest": "/login.html"
     }
   ]
