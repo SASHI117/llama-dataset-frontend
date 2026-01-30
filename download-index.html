@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Q/A Dataset Builder - Farm Vaidya</title>
+  <link rel="stylesheet" href="download-styles.css" />
+</head>
+
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-flex">
+        <img
+          src="C:\Users\mesas\OneDrive\Desktop\src\assets\f4dc07e942bb52c59f46e8f317b99671703d4da9.png"
+          alt="Farm Vaidya Logo"
+          class="header-logo"
+        />
+
+        <div class="header-actions">
+          <span class="draft-status" id="draftStatus">Draft saved</span>
+
+          <!-- ☰ MENU -->
+          <div class="menu-wrapper">
+            <button id="menuBtn" class="menu-btn">☰</button>
+
+            <div id="menuDropdown" class="menu-dropdown hidden">
+              <button id="viewLogsBtn">My Submissions</button>
+              <button id="logoutBtn">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ================= MAIN ================= -->
+  <div class="main-wrapper">
+
+    <div class="page-title">
+      <h1>Q/A Dataset Builder</h1>
+      <p class="subtitle">Create Question-Answer datasets for ML/AI training</p>
+    </div>
+
+    <div class="container-card">
+      <div class="grid-layout">
+
+        <!-- ========== LEFT PANEL ========== -->
+        <div class="left-panel">
+
+          <!-- Crop -->
+          <div class="form-group">
+            <label class="form-label">Select Crop <span class="required">*</span></label>
+            <select id="cropSelect" class="crop-select">
+            </select>
+
+            <div class="button-group">
+              <button class="btn-secondary" id="enterCropBtn">Enter</button>
+              <button class="btn-reset" id="resetCropBtn">Reset</button>
+            </div>
+          </div>
+
+          <!-- Question Type -->
+          <div class="form-group">
+            <label class="form-label">Select Question Type <span class="required">*</span></label>
+            <select id="behaviorSelect" class="crop-select">
+              <option value="">Choose question type...</option>
+              <option value="theoretical">Theoretical</option>
+              <option value="practical">Practical</option>
+              <option value="calculation">Calculation</option>
+              <option value="diagnostic">Diagnostic</option>
+              <option value="preventive">Preventive</option>
+              <option value="safety">Safety</option>
+            </select>
+
+            <div class="button-group">
+              <button class="btn-secondary" id="enterBehaviorBtn">Enter</button>
+              <button class="btn-reset" id="resetBehaviorBtn">Reset</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ========== RIGHT PANEL ========== -->
+        <div class="right-panel">
+
+          <!-- Actions -->
+          <div class="top-actions">
+            <button class="btn-preview" id="previewBtn">Preview</button>
+            <button class="btn-submit" id="submitBtn">Submit</button>
+          </div>
+
+          <!-- Q/A Container -->
+          <div class="qa-container" id="qaContainer">
+            <div class="empty-state" id="emptyState">
+              <p>No Q/A pairs yet. Click "+ New Slot" to begin.</p>
+            </div>
+          </div>
+
+          <!-- Add Slot -->
+          <button class="btn-add-new" id="addNewBtn">+ New Slot</button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CONFIRM MODAL ================= -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Confirm Submission</h2>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to submit all Q/A pairs?</p>
+        <p class="modal-info">
+          This will save <span id="totalPairs">0</span> question-answer pairs.
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="cancelSubmit">No</button>
+        <button class="btn-confirm" id="confirmSubmit">Yes, Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PREVIEW MODAL ================= -->
+  <div class="modal-overlay" id="previewModal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>Preview Q/A Dataset</h2>
+        <button class="btn-close" id="closePreview">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="preview-info">
+          <div><strong>Crop:</strong> <span id="previewCrop">-</span></div>
+          <div><strong>Type:</strong> <span id="previewTopic">-</span></div>
+          <div><strong>Total:</strong> <span id="previewCount">0</span></div>
+        </div>
+        <div class="preview-container" id="previewContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SUCCESS MODAL ================= -->
+  <div class="modal-overlay" id="successModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Successfully Submitted!</h2>
+      </div>
+      <div class="modal-body">
+        <p>Your Q/A dataset has been submitted successfully.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-confirm" id="closeSuccess">OK</button>
+      </div>
+    </div>
+  </div>
+  <!-- ================= MY SUBMISSIONS MODAL ================= -->
+  <div class="modal-overlay" id="logsModal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>My Submissions</h2>
+        <button class="btn-close" id="closeLogs">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="logsContainer"></div>
+      </div>
+    </div>
+  </div>
+  <!-- ================= SCRIPT ================= -->
+  <script src="download-script.js"></script>
+</body>
+</html>
