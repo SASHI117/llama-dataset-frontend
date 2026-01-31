@@ -4,14 +4,14 @@
 const authToken = sessionStorage.getItem("authToken");
 
 if (!authToken) {
-  window.location.replace("login.html");
+  window.location.replace("/");
 }
 
 // Prevent browser back/forward cache bypass
 window.addEventListener("pageshow", function (event) {
   if (event.persisted) {
     sessionStorage.removeItem("authToken");
-    window.location.replace("login.html");
+    window.location.replace("/");
   }
 });
 // ===============================
@@ -56,7 +56,7 @@ const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
   logoutBtn.onclick = () => {
     sessionStorage.removeItem("authToken");
-    window.location.href = "login.html";
+    window.location.replace("/");
   };
 }
 
@@ -307,7 +307,7 @@ function handleSubmit() {
       if (res.status === 401) {
         sessionStorage.removeItem("authToken");
         alert("Session expired. Please login again.");
-        window.location.href = "login.html";
+        window.location.replace("/");
         return;
       }
       if (!res.ok) throw new Error();
@@ -448,7 +448,7 @@ function handleAuthError(res) {
   if (res.status === 401) {
     sessionStorage.removeItem("authToken");
     alert("Session expired. Please login again.");
-    window.location.href = "login.html";
+    window.location.replace("/");
     return true;
   }
   return false;
