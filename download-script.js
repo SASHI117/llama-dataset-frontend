@@ -75,7 +75,7 @@ const closeSuccess = document.getElementById('closeSuccess');
 async function loadCrops() {
   try {
     const res = await fetch(
-      "https://llama-dataset-production.up.railway.app/crops",
+      "https://llama-dataset-production-85fb.up.railway.app/crops",
       {
         headers: { Authorization: `Bearer ${authToken}` }
       }
@@ -297,7 +297,7 @@ function handleSubmit() {
   submitBtn.innerText = 'Submitting...';
   submitBtn.disabled = true;
 
-  fetch('https://llama-dataset-production.up.railway.app/submit', {
+  fetch('https://llama-dataset-production-85fb.up.railway.app/submit', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
