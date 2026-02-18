@@ -7,13 +7,13 @@ if (!authToken) {
   window.location.replace("/");
 }
 
-// Prevent browser back/forward cache bypass
 window.addEventListener("pageshow", function (event) {
   if (event.persisted) {
     sessionStorage.removeItem("authToken");
     window.location.replace("/");
   }
 });
+
 // ===============================
 // STATE
 // ===============================
@@ -28,7 +28,6 @@ let pairCounter = 0;
 // ===============================
 // DOM
 // ===============================
-// ===== MENU & LOGS DOM =====
 const menuBtn = document.getElementById("menuBtn");
 const menuDropdown = document.getElementById("menuDropdown");
 const viewLogsBtn = document.getElementById("viewLogsBtn");
@@ -69,34 +68,33 @@ const confirmSubmit = document.getElementById('confirmSubmit');
 const cancelSubmit = document.getElementById('cancelSubmit');
 const closePreview = document.getElementById('closePreview');
 const closeSuccess = document.getElementById('closeSuccess');
+
+// ===============================
+// LOAD CROPS
+// ===============================
 async function loadCrops() {
   try {
     const res = await fetch(
       "https://llama-dataset-production.up.railway.app/crops",
       {
-        headers: {
-          "Authorization": `Bearer ${authToken}`
-        }
+        headers: { Authorization: `Bearer ${authToken}` }
       }
-    );  
-    const data = await res.json();
+    );
 
-    const cropSelect = document.getElementById("cropSelect");
+    const data = await res.json();
     cropSelect.innerHTML = '<option value="">Choose crop...</option>';
 
     data.crops.forEach(crop => {
       const option = document.createElement("option");
-      option.value = crop;      // EXACT folder name
+      option.value = crop;
       option.textContent = crop.replaceAll("_", " ");
       cropSelect.appendChild(option);
     });
-
-    console.log("Loaded crops:", data.crops.length);
-  } catch (err) {
-    console.error("Failed to load crops", err);
-    alert("Failed to load crops from server");
+  } catch {
+    alert("Failed to load crops");
   }
 }
+
 // ===============================
 // INIT
 // ===============================
@@ -111,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // EVENTS
 // ===============================
 function attachEvents() {
-
   enterCropBtn.onclick = () => {
     if (!cropSelect.value) return;
     qaData.crop = cropSelect.value;
@@ -151,14 +148,11 @@ function attachEvents() {
   confirmSubmit.onclick = handleSubmit;
   cancelSubmit.onclick = () => confirmModal.classList.remove('active');
   closePreview.onclick = () => previewModal.classList.remove('active');
+
   closeSuccess.onclick = () => {
-  successModal.classList.remove("active");
-
-  // Clear draft + reset UI
-  localStorage.removeItem("qaDatasetDraft");
-
-  // Reload page cleanly (safe, token preserved)
-  window.location.reload();
+    successModal.classList.remove("active");
+    localStorage.removeItem("qaDatasetDraft");
+    window.location.reload();
   };
 }
 
@@ -179,13 +173,14 @@ function addNewQAPair() {
   const pair = {
     id: crypto.randomUUID(),
     number: qaData.pairs.length + 1,
-    question: '',
-    answer: ''
+    turns: [
+      { role: "user", text: "" },
+      { role: "model", text: "" }
+    ]
   };
 
   qaData.pairs.push(pair);
   pairCounter = qaData.pairs.length;
-
   renderPair(pair);
   saveDraft();
 }
@@ -200,23 +195,37 @@ function renderPair(pair) {
       <div class="qa-number">Q${pair.number}</div>
       <button class="btn-delete">Delete</button>
     </div>
-    <textarea class="qa-textarea question" placeholder="Enter question"></textarea>
-    <textarea class="qa-textarea answer" placeholder="Enter answer"></textarea>
+    <div class="turns-container"></div>
+    <button class="btn-followup">+ Follow-up</button>
   `;
 
-  const qInput = card.querySelector('.question');
-  const aInput = card.querySelector('.answer');
+  const turnsContainer = card.querySelector('.turns-container');
 
-  qInput.value = pair.question;
-  aInput.value = pair.answer;
+  function renderTurns() {
+    turnsContainer.innerHTML = "";
+    pair.turns.forEach(turn => {
+      const textarea = document.createElement("textarea");
+      textarea.className = "qa-textarea";
+      textarea.placeholder = turn.role === "user" ? "Enter question" : "Enter answer";
+      textarea.value = turn.text;
 
-  qInput.oninput = e => {
-    pair.question = e.target.value;
-    saveDraft();
-  };
+      textarea.oninput = e => {
+        turn.text = e.target.value;
+        saveDraft();
+      };
 
-  aInput.oninput = e => {
-    pair.answer = e.target.value;
+      turnsContainer.appendChild(textarea);
+    });
+  }
+
+  renderTurns();
+
+  card.querySelector(".btn-followup").onclick = () => {
+    pair.turns.push(
+      { role: "user", text: "" },
+      { role: "model", text: "" }
+    );
+    renderTurns();
     saveDraft();
   };
 
@@ -225,8 +234,7 @@ function renderPair(pair) {
     card.remove();
     renumber();
     saveDraft();
-
-    if (qaData.pairs.length === 0) showEmptyState();
+    if (!qaData.pairs.length) showEmptyState();
   };
 
   qaContainer.appendChild(card);
@@ -238,7 +246,6 @@ function renumber() {
     const card = document.querySelector(`[data-id="${p.id}"]`);
     if (card) card.querySelector('.qa-number').innerText = `Q${p.number}`;
   });
-  pairCounter = qaData.pairs.length;
 }
 
 // ===============================
@@ -258,7 +265,7 @@ function removeEmptyState() {
 }
 
 // ===============================
-// PREVIEW
+// PREVIEW (FIXED)
 // ===============================
 function showPreview() {
   document.getElementById('previewCrop').innerText = qaData.crop || '-';
@@ -269,19 +276,20 @@ function showPreview() {
   container.innerHTML = '';
 
   qaData.pairs.forEach(p => {
-    container.innerHTML += `
-      <div class="preview-item">
-        <strong>Q:</strong> ${p.question}<br/>
-        <strong>A:</strong> ${p.answer}
-      </div>
-    `;
+    p.turns.forEach(t => {
+      container.innerHTML += `
+        <div class="preview-item">
+          <strong>${t.role === "user" ? "Q" : "A"}:</strong> ${t.text}
+        </div>
+      `;
+    });
   });
 
   previewModal.classList.add('active');
 }
 
 // ===============================
-// SUBMIT (BACKEND)
+// SUBMIT
 // ===============================
 function handleSubmit() {
   confirmModal.classList.remove('active');
@@ -291,22 +299,21 @@ function handleSubmit() {
 
   fetch('https://llama-dataset-production.up.railway.app/submit', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' ,
-               'Authorization': `Bearer ${authToken}`
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`
     },
     body: JSON.stringify({
       crop: qaData.crop,
       behavior: qaData.behavior,
-      qa_pairs: qaData.pairs.map(p => ({
-        question: p.question.trim(),
-        answer: p.answer.trim()
-      }))
+      turns: qaData.pairs.flatMap(p =>
+        p.turns.map(t => ({ role: t.role, text: t.text.trim() }))
+      )
     })
   })
     .then(res => {
       if (res.status === 401) {
         sessionStorage.removeItem("authToken");
-        alert("Session expired. Please login again.");
         window.location.replace("/");
         return;
       }
@@ -314,7 +321,7 @@ function handleSubmit() {
       successModal.classList.add('active');
       localStorage.removeItem('qaDatasetDraft');
     })
-    .catch(() => alert('Submission failed. Backend unreachable.'))
+    .catch(() => alert('Submission failed'))
     .finally(() => {
       submitBtn.innerText = 'Submit';
       submitBtn.disabled = false;
@@ -322,7 +329,7 @@ function handleSubmit() {
 }
 
 // ===============================
-// VALIDATION
+// VALIDATION (FIXED)
 // ===============================
 function validateBeforeSubmit() {
   if (!qaData.crop || !qaData.behavior) {
@@ -333,7 +340,9 @@ function validateBeforeSubmit() {
     alert('Add at least one Q/A pair');
     return false;
   }
-  return qaData.pairs.every(p => p.question.trim() && p.answer.trim());
+  return qaData.pairs.every(p =>
+    p.turns.every(t => t.text.trim())
+  );
 }
 
 // ===============================
@@ -351,7 +360,6 @@ function loadDraft() {
     showEmptyState();
     return;
   }
-
   qaData = JSON.parse(saved);
   cropSelect.value = qaData.crop || '';
   behaviorSelect.value = qaData.behavior || '';
@@ -362,22 +370,7 @@ function renderAllPairs() {
     showEmptyState();
     return;
   }
-
   qaData.pairs.forEach(renderPair);
-  pairCounter = qaData.pairs.length;
-}
-
-// ===============================
-// RESET
-// ===============================
-function resetAll() {
-  qaData = { crop: '', behavior: '', pairs: [] };
-  pairCounter = 0;
-  localStorage.removeItem('qaDatasetDraft');
-  qaContainer.innerHTML = '';
-  showEmptyState();
-  enableButton(enterCropBtn);
-  enableButton(enterBehaviorBtn);
 }
 
 // ===============================
@@ -393,63 +386,4 @@ function enableButton(btn) {
   btn.style.background = '';
   btn.style.color = '';
   btn.disabled = false;
-}
-// ===============================
-// MENU & LOGS EVENTS
-// ===============================
-
-if (menuBtn && menuDropdown) {
-  menuBtn.onclick = () => {
-    menuDropdown.classList.toggle("hidden");
-  };
-}
-
-if (viewLogsBtn) {
-  viewLogsBtn.onclick = async () => {
-    logsContainer.innerHTML = "Loading...";
-    logsModal.classList.add("active");
-    menuDropdown.classList.add("hidden");
-
-    const res = await fetch(
-      "https://llama-dataset-production.up.railway.app/my-submissions",
-      {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      }
-    );
-
-    const data = await res.json();
-
-    if (!data.submissions || !data.submissions.length) {
-      logsContainer.innerHTML = "<p>No submissions yet.</p>";
-      return;
-    }
-
-    logsContainer.innerHTML = data.submissions
-      .map(
-        (s) => `
-        <div class="log-item">
-          <strong>Crop:</strong> ${s.crop}<br/>
-          <strong>Type:</strong> ${s.behavior}<br/>
-          <strong>Count:</strong> ${s.count}<br/>
-          <small>${new Date(s.timestamp).toLocaleString()}</small>
-        </div>
-      `
-      )
-      .join("");
-  };
-}
-
-if (closeLogs) {
-  closeLogs.onclick = () => logsModal.classList.remove("active");
-}
-function handleAuthError(res) {
-  if (res.status === 401) {
-    sessionStorage.removeItem("authToken");
-    alert("Session expired. Please login again.");
-    window.location.replace("/");
-    return true;
-  }
-  return false;
 }
