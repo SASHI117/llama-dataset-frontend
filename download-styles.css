@@ -848,3 +848,35 @@ body::before {
 .log-item:last-child {
   border-bottom: none;
 }
+/* ===============================
+   MULTI-TURN / FOLLOW-UP SUPPORT
+================================ */
+
+/* Container holding multiple turns */
+.turns-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Follow-up button inside Q/A card */
+.btn-followup {
+  align-self: flex-start;
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--green-light);
+  color: var(--green);
+  border: 1px dashed var(--green);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-followup:hover {
+  background: white;
+  border-style: solid;
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.25);
+}
