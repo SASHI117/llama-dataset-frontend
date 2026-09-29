@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Syntax-check scripts
+        run: node --check download-script.js && node --check config.js
+      - name: No user text rendered through innerHTML with interpolation
+        run: |
+          if grep -nE 'innerHTML\s*\+?=\s*`[^`]*\$\{' download-script.js; then
+            echo "Interpolated innerHTML found; use textContent/DOM nodes"; exit 1
+          fi
