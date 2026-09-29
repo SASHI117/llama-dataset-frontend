@@ -64,6 +64,15 @@ body::before {
   height: 80px;
 }
 
+.brand {
+  display: inline-flex;
+  align-items: center;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1f2937;
+}
+
 .header-flex {
   display: flex;
   align-items: center;
