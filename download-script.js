@@ -1,6 +1,7 @@
 // ===============================
 // AUTH + BACK/FORWARD GUARD (FINAL)
 // ===============================
+const API = window.DATASET_API;
 const authToken = sessionStorage.getItem("authToken");
 
 if (!authToken) {
@@ -75,12 +76,13 @@ const closeSuccess = document.getElementById('closeSuccess');
 async function loadCrops() {
   try {
     const res = await fetch(
-      "https://llama-dataset-production-85fb.up.railway.app/crops",
+      `${API}/crops`,
       {
         headers: { Authorization: `Bearer ${authToken}` }
       }
     );
 
+    if (handleAuthError(res)) return;
     const data = await res.json();
     cropSelect.innerHTML = '<option value="">Choose crop...</option>';
 
@@ -90,6 +92,13 @@ async function loadCrops() {
       option.textContent = crop.replaceAll("_", " ");
       cropSelect.appendChild(option);
     });
+
+    // The draft is restored before the crop list arrives; re-apply it now
+    // that the option exists, otherwise the saved crop silently disappears.
+    if (qaData.crop) {
+      cropSelect.value = qaData.crop;
+      disableButton(enterCropBtn);
+    }
   } catch {
     alert("Failed to load crops");
   }
@@ -275,13 +284,16 @@ function showPreview() {
   const container = document.getElementById('previewContainer');
   container.innerHTML = '';
 
+  // Build nodes with textContent: answers are free text and may contain
+  // "<" or markup, which innerHTML would render (or execute).
   qaData.pairs.forEach(p => {
     p.turns.forEach(t => {
-      container.innerHTML += `
-        <div class="preview-item">
-          <strong>${t.role === "user" ? "Q" : "A"}:</strong> ${t.text}
-        </div>
-      `;
+      const item = document.createElement("div");
+      item.className = "preview-item";
+      const label = document.createElement("strong");
+      label.textContent = t.role === "user" ? "Q: " : "A: ";
+      item.append(label, document.createTextNode(t.text));
+      container.appendChild(item);
     });
   });
 
@@ -297,7 +309,7 @@ function handleSubmit() {
   submitBtn.innerText = 'Submitting...';
   submitBtn.disabled = true;
 
-  fetch('https://llama-dataset-production-85fb.up.railway.app/submit', {
+  fetch(`${API}/submit`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -312,11 +324,7 @@ function handleSubmit() {
     })
   })
     .then(res => {
-      if (res.status === 401) {
-        sessionStorage.removeItem("authToken");
-        window.location.replace("/");
-        return;
-      }
+      if (handleAuthError(res)) return;
       if (!res.ok) throw new Error();
       successModal.classList.add('active');
       localStorage.removeItem('qaDatasetDraft');
@@ -340,9 +348,12 @@ function validateBeforeSubmit() {
     alert('Add at least one Q/A pair');
     return false;
   }
-  return qaData.pairs.every(p =>
-    p.turns.every(t => t.text.trim())
-  );
+  const incomplete = qaData.pairs.find(p => p.turns.some(t => !t.text.trim()));
+  if (incomplete) {
+    alert(`Q${incomplete.number} has an empty question or answer`);
+    return false;
+  }
+  return true;
 }
 
 // ===============================
@@ -360,9 +371,15 @@ function loadDraft() {
     showEmptyState();
     return;
   }
-  qaData = JSON.parse(saved);
-  cropSelect.value = qaData.crop || '';
+  try {
+    qaData = JSON.parse(saved);
+  } catch {
+    localStorage.removeItem('qaDatasetDraft');   // corrupt draft: start clean
+    showEmptyState();
+    return;
+  }
   behaviorSelect.value = qaData.behavior || '';
+  if (qaData.behavior) disableButton(enterBehaviorBtn);
 }
 
 function renderAllPairs() {
@@ -386,4 +403,70 @@ function enableButton(btn) {
   btn.style.background = '';
   btn.style.color = '';
   btn.disabled = false;
+}
+
+// ===============================
+// MENU & MY SUBMISSIONS
+// ===============================
+function handleAuthError(res) {
+  if (res.status === 401) {
+    sessionStorage.removeItem("authToken");
+    alert("Session expired. Please log in again.");
+    window.location.replace("/");
+    return true;
+  }
+  return false;
+}
+
+function renderSubmission(s) {
+  const item = document.createElement("div");
+  item.className = "log-item";
+  const rows = [
+    ["Crop", String(s.crop).replaceAll("_", " ")],
+    ["Type", s.behavior],
+    ["Count", s.count],
+  ];
+  for (const [label, value] of rows) {
+    const strong = document.createElement("strong");
+    strong.textContent = `${label}: `;
+    item.append(strong, document.createTextNode(value ?? "-"), document.createElement("br"));
+  }
+  const when = document.createElement("small");
+  when.textContent = new Date(s.timestamp).toLocaleString();
+  item.appendChild(when);
+  return item;
+}
+
+if (menuBtn && menuDropdown) {
+  menuBtn.onclick = () => menuDropdown.classList.toggle("hidden");
+}
+
+if (viewLogsBtn) {
+  viewLogsBtn.onclick = async () => {
+    logsContainer.textContent = "Loading...";
+    logsModal.classList.add("active");
+    menuDropdown.classList.add("hidden");
+
+    try {
+      const res = await fetch(`${API}/my-submissions`, {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      if (handleAuthError(res)) return;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      logsContainer.textContent = "";
+      if (!data.submissions || !data.submissions.length) {
+        logsContainer.textContent = "No submissions yet.";
+        return;
+      }
+      data.submissions.forEach(s => logsContainer.appendChild(renderSubmission(s)));
+    } catch (err) {
+      logsContainer.textContent = `Could not load submissions (${err.message}).`;
+    }
+  };
+}
+
+if (closeLogs) {
+  closeLogs.onclick = () => logsModal.classList.remove("active");
 }

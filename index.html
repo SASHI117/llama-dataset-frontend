@@ -160,6 +160,7 @@
   <!-- ===============================
        LOGIN SCRIPT
   ================================ -->
+  <script src="config.js"></script>
   <script>
     // -------------------------------
     // HARD RESET ANY OLD SESSION
@@ -192,7 +193,7 @@
 
       try {
         const res = await fetch(
-          "https://llama-dataset-production-85fb.up.railway.app/login",
+          `${window.DATASET_API}/login`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
