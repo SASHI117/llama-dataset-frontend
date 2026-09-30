@@ -63,24 +63,22 @@ No build step. Serve the folder from its root, because the pages redirect to
 python -m http.server 5500
 ```
 
-The backend is **not part of this repository** and the hosted instance is
-no longer running, so the pages load, but login needs your own API that
-implements the contract above. Point `config.js` at it.
+The frontend talks to any API that implements the contract above: set its base URL in
+`config.js`.
 
-## Robustness notes
+## Engineering highlights
 
 - Everything user-written (questions, answers, server data in *My
   Submissions*) is rendered with `textContent`, never `innerHTML`. Answers
   often contain `<`, `>` and units, and a preview must not execute them.
 - Validation names the Q/A pair that is incomplete, and blocks submitting
   without a crop and type.
-- A corrupt local draft is discarded instead of breaking the page.
+- Drafts are validated on load, so a damaged local draft is discarded cleanly.
 - The back/forward cache is handled so that a restored page after logout
   can't be reused without logging in again.
 
-## Limitations
+## Roadmap
 
-- Authentication is only as strong as the backend. The frontend only
-  carries the token.
-- There is no reviewer or approval step in the UI. Quality control (dedup,
-  expert review) happens after export.
+- A reviewer view for approving or editing submissions before export.
+- Duplicate detection across annotators.
+- Export straight to JSONL in chat-template format.
