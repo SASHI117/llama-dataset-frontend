@@ -3,10 +3,10 @@
 [![CI](https://github.com/SASHI117/llama-dataset-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/SASHI117/llama-dataset-frontend/actions/workflows/ci.yml)
 
 A browser tool for **domain experts to write instruction-tuning data**. I
-built it during my FarmVaidya.ai internship so that agronomists, who know the
-answers but don't write JSONL, could author multi-turn question/answer
-conversations for fine-tuning an agricultural assistant LLM. Each
-conversation is tagged by crop and question type, and it is stored in the
+built it during my FarmVaidya.ai internship so that agricultural field
+experts, who know the answers but don't write JSONL, could author multi-turn
+question/answer conversations for fine-tuning an agricultural assistant LLM.
+Each conversation is tagged by crop and question type, and it is stored in the
 `user`/`model` role format that chat templates such as Gemma's expect.
 
 ![Login](docs/login.png)
@@ -27,7 +27,7 @@ or dropped connection in the field doesn't lose a half-written session.
 
 ## Data contract
 
-`POST {API}/submit`:
+`POST {API}/submit` (example content is illustrative):
 
 ```json
 {
